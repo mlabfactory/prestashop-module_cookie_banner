@@ -1,0 +1,31 @@
+{
+  "name": "dolcezampa_cookie_policy",
+  "displayName": "Dolce & Zampa Cookie Policy",
+  "version": "1.0.0",
+  "description": "Manage cookie policy banner",
+  "author": "mlabfactory",
+  "tab": "front_office_features",
+  "is_configurable": 0,
+  "need_instance": 0,
+  "limited_countries": [],
+  "parent_class": "Module",
+  "bootstrap": true,
+  "compatible_versions": {
+    "min": "8.0.0",
+    "max": "9.99.99"
+  },
+  "dependencies": [],
+  "hooks": [
+    "displayFooter"
+  ],
+  "translations": {
+    "en": {
+      "displayName": "Dolce & Zampa Cookie Policy",
+      "description": "Manage cookie policy banner"
+    },
+    "it": {
+      "displayName": "Dolce & Zampa Cookie Policy",
+      "description": "Gestisci il banner della cookie policy"
+    }
+  }
+}
