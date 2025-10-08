@@ -1,6 +1,6 @@
 <?php
 
-namespace Dolcezampa\CookiePolicyModule\Objects;
+namespace MlabPs\CookiePolicyModule\Objects;
 
 interface ConfigurationModuleInterface
 {

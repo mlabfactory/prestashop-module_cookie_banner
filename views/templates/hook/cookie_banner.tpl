@@ -1,5 +1,5 @@
 {**
- * Dolce & Zampa Cookie Policy Banner
+ * Mlab Cookie Policy Banner
  * Template per il banner dei cookie in fondo alla pagina
  *}
 
@@ -7,7 +7,7 @@
 <!-- Cookie Banner Debug: Template loaded -->
 
 <style>
-    .dolcezampa-cookie-banner {
+    .mlab-cookie-banner {
         display: none;
         position: fixed;
         bottom: 0;
@@ -20,7 +20,7 @@
     }
 </style>
 
-<div id="dolcezampa-cookie-banner" class="dolcezampa-cookie-banner">
+<div id="mlab-cookie-banner" class="mlab-cookie-banner">
     <div class="cookie-banner-container">
         <div class="cookie-content">
             <div class="cookie-icon">
@@ -120,98 +120,3 @@
         </div>
     </div>
 </div>
-
-<script>
-{literal}
-    console.log('Cookie banner script loaded');
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM loaded for cookie banner');
-        const banner = document.getElementById('dolcezampa-cookie-banner');
-        const modal = document.getElementById('cookie-modal');
-
-        // Funzione per verificare se il cookie esiste
-        function getCookiePreferences() {
-            const cookieName = 'dolcezampa_cookie_preferences=';
-            const cookies = document.cookie.split(';');
-            for(let cookie of cookies) {
-                cookie = cookie.trim();
-                if (cookie.indexOf(cookieName) === 0) {
-                    return JSON.parse(cookie.substring(cookieName.length));
-                }
-            }
-            return null;
-        }
-
-        // Controlla se il cookie esiste già
-        const existingPreferences = getCookiePreferences();
-        if (!existingPreferences) {
-            banner.style.display = 'block';
-        } else {
-            banner.style.display = 'none';
-        }
-
-        // Gestione apertura/chiusura modal
-        document.getElementById('cookie-customize').addEventListener('click', () => {
-            modal.style.display = 'block';
-        });
-        
-        document.getElementById('cookie-modal-close').addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
-
-        // Funzione per salvare il cookie tecnico
-        function saveCookiePreferences(preferences) {
-            const expiryDate = new Date();
-            expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-            document.cookie = `dolcezampa_cookie_preferences=${JSON.stringify(preferences)};expires=${expiryDate.toUTCString()};path=/`;
-            banner.style.display = 'none';
-        }
-
-        // Gestione salvataggio preferenze
-        document.getElementById('cookie-save-preferences').addEventListener('click', () => {
-            const preferences = {
-                analytics: document.getElementById('cookie-analytics').checked,
-                marketing: document.getElementById('cookie-marketing').checked,
-                preferences: document.getElementById('cookie-preferences').checked,
-                necessary: true
-            };
-            saveCookiePreferences(preferences);
-            modal.style.display = 'none';
-        });
-
-        // Funzione corretta per accettare tutti i cookie
-        function acceptAll() {
-            const preferences = {
-                analytics: true,
-                marketing: true,
-                preferences: true,
-                necessary: true
-            };
-            saveCookiePreferences(preferences);
-            modal.style.display = 'none';
-        }
-
-        // Gestione accetta tutti
-        document.getElementById('cookie-accept-all').addEventListener('click', acceptAll);
-        document.getElementById('cookie-accept-all-modal').addEventListener('click', acceptAll);
-
-        // Gestione rifiuta tutti
-        document.getElementById('cookie-reject').addEventListener('click', () => {
-            const preferences = {
-                analytics: false,
-                marketing: false,
-                preferences: false,
-                necessary: true
-            };
-            saveCookiePreferences(preferences);
-        });
-
-        // Chiudi modal cliccando fuori
-        window.addEventListener('click', (event) => {
-            if (event.target === modal) {
-                modal.style.display = 'none';
-            }
-        });
-    });
-{/literal}
-</script>

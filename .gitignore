@@ -1,2 +1,8 @@
 vendor/*
+node_modules/
+
+# Development files (keep compiled JS for deployment)
+*.d.ts
+*.d.ts.map
+*.js.map
 

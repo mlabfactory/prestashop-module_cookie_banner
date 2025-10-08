@@ -1,15 +1,15 @@
 <?php
 
-namespace Dolcezampa\CookiePolicyModule\Controllers;
+namespace MlabPs\CookiePolicyModule\Controllers;
 
 // Rimuoviamo temporaneamente i use delle classi mancanti
-// use Dolcezampa\CookiePolicyModule\Objects\CookieTabConfiguration;
-// use Dolcezampa\CookiePolicyModule\Objects\ModuleConfigurations;
+// use MlabPs\CookiePolicyModule\Objects\CookieTabConfiguration;
+// use MlabPs\CookiePolicyModule\Objects\ModuleConfigurations;
 
 class ModuleController
 {
     private \Context $context;
-    private string $moduleName = 'dolcezampa_cookie_policy';
+    private string $moduleName = 'mlab_cookie_policy';
     private \Module $module;
     private string $modulePath;
     
@@ -152,7 +152,7 @@ class ModuleController
                 "Template not found: {$templatePath}",
                 3,
                 null,
-                'DolceZampaCookiePolicy'
+                'MlabPsCookiePolicy'
             );
             return '';
         }
@@ -168,7 +168,7 @@ class ModuleController
         try {
             // Usa direttamente Configuration invece delle classi
             $templateVars = array_merge([
-                'banner_id' => 'dolcezampa-banner-' . $position,
+                'banner_id' => 'mlab-banner-' . $position,
                 'banner_position' => $position,
                 'description' => \Configuration::get('COOKIE_DESCRIPTION_COOKIE_POLICY', ''),
                 'privacy_url' => \Configuration::get('COOKIE_URL_PRIVACY_POLICY', ''),
@@ -187,7 +187,7 @@ class ModuleController
                 'Cookie Policy Banner Error: ' . $e->getMessage(),
                 3,
                 null,
-                'DolceZampaCookiePolicy'
+                'MlabPsCookiePolicy'
             );
             return '';
         }
@@ -224,7 +224,7 @@ class ModuleController
                 'Cookie Policy BackOffice Error: ' . $e->getMessage(),
                 3,
                 null,
-                'DolceZampaCookiePolicy'
+                'MlabPsCookiePolicy'
             );
         }
     }
@@ -256,7 +256,7 @@ class ModuleController
                 'Cookie Policy Header Error: ' . $e->getMessage(),
                 3,
                 null,
-                'DolceZampaCookiePolicy'
+                'MlabPsCookiePolicy'
             );
         }
     }
@@ -270,7 +270,7 @@ class ModuleController
                 'Cookie Policy Footer Error: ' . $e->getMessage(),
                 3,
                 null,
-                'DolceZampaCookiePolicy'
+                'MlabPsCookiePolicy'
             );
             return '';
         }
@@ -285,7 +285,7 @@ class ModuleController
                 'Cookie Policy Configuration Error: ' . $e->getMessage(),
                 3,
                 null,
-                'DolceZampaCookiePolicy'
+                'MlabPsCookiePolicy'
             );
             return $this->module->l('Si è verificato un errore durante il caricamento della configurazione.');
         }
@@ -300,7 +300,7 @@ class ModuleController
                 'Cookie Policy Banner Error: ' . $e->getMessage(),
                 3,
                 null,
-                'DolceZampaCookiePolicy'
+                'MlabPsCookiePolicy'
             );
             return '';
         }

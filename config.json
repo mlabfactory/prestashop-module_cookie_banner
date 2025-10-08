@@ -1,6 +1,6 @@
 {
-  "name": "dolcezampa_cookie_policy",
-  "displayName": "Dolce & Zampa Cookie Policy",
+  "name": "mlab_cookie_policy",
+  "displayName": "MLab Cookie Policy",
   "version": "1.0.0",
   "description": "Manage cookie policy banner",
   "author": "mlabfactory",
@@ -20,11 +20,11 @@
   ],
   "translations": {
     "en": {
-      "displayName": "Dolce & Zampa Cookie Policy",
+      "displayName": "MLab Cookie Policy",
       "description": "Manage cookie policy banner"
     },
     "it": {
-      "displayName": "Dolce & Zampa Cookie Policy",
+      "displayName": "MLab Cookie Policy",
       "description": "Gestisci il banner della cookie policy"
     }
   }

@@ -1,10 +1,10 @@
 <?php
-namespace Dolcezampa\CookiePolicyModule\Objects;
+namespace MlabPs\CookiePolicyModule\Objects;
 
 use Configuration;
-use Dolcezampa\CookiePolicyModule\Traits\Config;
+use MlabPs\CookiePolicyModule\Traits\Config;
 
-final class CookieTabConfiguration implements \Dolcezampa\CookiePolicyModule\Objects\ConfigurationModuleInterface
+final class CookieTabConfiguration implements \MlabPs\CookiePolicyModule\Objects\ConfigurationModuleInterface
 {
     use Config;
     private const ALLOWED_CONFIGURATIONS = [
@@ -14,10 +14,10 @@ final class CookieTabConfiguration implements \Dolcezampa\CookiePolicyModule\Obj
         self::CONFIG_COOKIE_DESCRIPTION_COOKIE_CUSTOM
     ];
 
-    public const CONFIG_COOKIE_DESCRIPTION_COOKIE_NEEDED = 'DOLCE_COOKIE_DESCRIPTION_COOKIE_NEEDED';
-    public const CONFIG_COOKIE_DESCRIPTION_COOKIE_ANALYTICS = 'DOLCE_COOKIE_DESCRIPTION_COOKIE_ANALYTICS';
-    public const CONFIG_COOKIE_DESCRIPTION_COOKIE_MARKETING = 'DOLCE_COOKIE_DESCRIPTION_COOKIE_MARKETING';
-    public const CONFIG_COOKIE_DESCRIPTION_COOKIE_CUSTOM = 'DOLCE_COOKIE_DESCRIPTION_COOKIE_CUSTOM';
+    public const CONFIG_COOKIE_DESCRIPTION_COOKIE_NEEDED = 'MLAB_COOKIE_DESCRIPTION_COOKIE_NEEDED';
+    public const CONFIG_COOKIE_DESCRIPTION_COOKIE_ANALYTICS = 'MLAB_COOKIE_DESCRIPTION_COOKIE_ANALYTICS';
+    public const CONFIG_COOKIE_DESCRIPTION_COOKIE_MARKETING = 'MLAB_COOKIE_DESCRIPTION_COOKIE_MARKETING';
+    public const CONFIG_COOKIE_DESCRIPTION_COOKIE_CUSTOM = 'MLAB_COOKIE_DESCRIPTION_COOKIE_CUSTOM';
 
 
 

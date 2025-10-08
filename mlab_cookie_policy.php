@@ -1,12 +1,12 @@
 <?php
 
-use Dolcezampa\CookiePolicyModule\Controllers\ModuleController;
+use MlabPs\CookiePolicyModule\Controllers\ModuleController;
 
 
 /**
  * Prestashop Module to manage cookie policy banner
  * @author mlabfactory <tech@mlabfactory.com>
- * Dolce & Zampa - Cookie Policy Module
+ * MlabPs - Cookie Policy Module
  */
 
 if (!defined('_PS_VERSION_')) {
@@ -19,7 +19,7 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 } else {
     // Autoloader alternativo manuale - CORRETTO IL NAMESPACE
     spl_autoload_register(function ($className) {
-        $prefix = 'Dolcezampa\\CookiePolicyModule\\';
+        $prefix = 'MlabPs\\CookiePolicyModule\\';
         $base_dir = __DIR__ . '/src/';
         
         $len = strlen($prefix);
@@ -37,13 +37,13 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 }
 
 
-class Dolcezampa_Cookie_Policy extends Module
+class Mlab_Cookie_Policy extends Module
 {
     private $moduleController;
 
     public function __construct()
     {
-        $this->name = 'dolcezampa_cookie_policy';
+        $this->name = 'mlab_cookie_policy';
         $this->tab = 'front_office_features';
         $this->version = '1.0.0';
         $this->author = 'mlabfactory';
@@ -61,7 +61,7 @@ class Dolcezampa_Cookie_Policy extends Module
         // Chiamata SEMPRE sicura al parent constructor
         parent::__construct();
 
-        $this->displayName = $this->l('Dolce & Zampa Cookie Policy');
+        $this->displayName = $this->l('MLab Cookie Policy');
         $this->description = $this->l('Activate the cookie policy banner');
         $this->confirmUninstall = $this->l('Are you sure you want to uninstall this module?');
 
@@ -96,12 +96,61 @@ class Dolcezampa_Cookie_Policy extends Module
 
     public function install()
     {
+        // Check if compiled JavaScript exists
+        $jsFile = $this->_path . 'assets/js/cookie-policy.js';
+        if (!file_exists($jsFile) || filesize($jsFile) === 0) {
+            // Try to compile TypeScript if possible
+            if (!$this->compileTypeScript()) {
+                // If compilation fails, show error
+                $this->_errors[] = $this->l('Cookie policy JavaScript file is missing. Please compile TypeScript first: cd modules/mlab_cookie_policy && npx tsc');
+                return false;
+            }
+        }
+        
         return parent::install() &&
             $this->registerHook('actionShowCookiePolicyBanner') &&
             $this->registerHook('displayHeader') && // Per includere CSS/JS
             $this->registerHook('displayFooter') &&
             $this->registerHook('displayFooterAfter') && // Aggiungiamo questo hook
             $this->registerHook('displayBeforeBodyClosingTag'); // E questo come fallback
+    }
+
+    /**
+     * Try to compile TypeScript to JavaScript
+     * @return bool True if compilation succeeded or was not needed, false if required but failed
+     */
+    private function compileTypeScript(): bool
+    {
+        $tsFile = $this->_path . 'assets/ts/cookie-policy.ts';
+        $jsFile = $this->_path . 'assets/js/cookie-policy.js';
+        
+        // Check if TypeScript file exists
+        if (!file_exists($tsFile)) {
+            return false;
+        }
+        
+        // Check if node and npx are available
+        $nodeCheck = shell_exec('which node 2>/dev/null');
+        $npxCheck = shell_exec('which npx 2>/dev/null');
+        
+        if (empty($nodeCheck) || empty($npxCheck)) {
+            // Node.js not available, cannot compile
+            return false;
+        }
+        
+        // Try to compile
+        $output = [];
+        $returnCode = 0;
+        
+        chdir($this->_path);
+        exec('npx tsc 2>&1', $output, $returnCode);
+        
+        // Check if compilation was successful
+        if ($returnCode === 0 && file_exists($jsFile) && filesize($jsFile) > 0) {
+            return true;
+        }
+        
+        return false;
     }
 
     public function uninstall()

@@ -1,10 +1,10 @@
 <?php
-namespace Dolcezampa\CookiePolicyModule\Objects;
+namespace MlabPs\CookiePolicyModule\Objects;
 
 use Configuration;
-use Dolcezampa\CookiePolicyModule\Traits\Config;
+use MlabPs\CookiePolicyModule\Traits\Config;
 
-final class ModuleConfigurations implements \Dolcezampa\CookiePolicyModule\Objects\ConfigurationModuleInterface
+final class ModuleConfigurations implements \MlabPs\CookiePolicyModule\Objects\ConfigurationModuleInterface
 {
     use Config;
     private const ALLOWED_CONFIGURATIONS = [
@@ -13,9 +13,9 @@ final class ModuleConfigurations implements \Dolcezampa\CookiePolicyModule\Objec
         self::CONFIG_COOKIE_DESCRIPTION_COOKIE_POLICY
     ];
 
-    public const CONFIG_COOKIE_URL_COOKIE_POLICY = 'DOLCE_COOKIE_URL_COOKIE_POLICY';
-    public const CONFIG_COOKIE_URL_PRIVACY_POLICY = 'DOLCE_COOKIE_URL_PRIVACY_POLICY';
-    public const CONFIG_COOKIE_DESCRIPTION_COOKIE_POLICY = 'DOLCE_COOKIE_DESCRIPTION_COOKIE_POLICY';
+    public const CONFIG_COOKIE_URL_COOKIE_POLICY = 'MLAB_COOKIE_URL_COOKIE_POLICY';
+    public const CONFIG_COOKIE_URL_PRIVACY_POLICY = 'MLAB_COOKIE_URL_PRIVACY_POLICY';
+    public const CONFIG_COOKIE_DESCRIPTION_COOKIE_POLICY = 'MLAB_COOKIE_DESCRIPTION_COOKIE_POLICY';
 
 
     public ?string $cookieUrlCookiePolicy;

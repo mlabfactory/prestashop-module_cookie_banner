@@ -1,5 +1,5 @@
 <?php
-namespace Dolcezampa\CookiePolicyModule\Traits;
+namespace MlabPs\CookiePolicyModule\Traits;
 
 use Configuration;
 

@@ -1,9 +1,9 @@
 {
-    "name": "dolcezampa/cookie-policy-module",
+    "name": "mlab/ps-cookie-policy-module",
     "description": "Prestashop custom cookie policy module",
     "autoload": {
         "psr-4": {
-            "Dolcezampa\\CookiePolicyModule\\": "src/"
+            "MlabPs\\CookiePolicyModule\\": "src/"
         }
     },
     "authors": [
