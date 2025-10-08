@@ -5,22 +5,17 @@
  * @author Mlab Factory <info@mlabfactory.com>
  * TypeScript implementation for PrestaShop theme
  */
-Object.defineProperty(exports, "__esModule", { value: true });
 class MlabCookieBanner {
-    banner;
-    modal;
-    warningModal;
-    cookieName = 'mlab_cookie_preferences';
-    // Scripts that should be blocked/unblocked based on cookie preferences
-    cookieScripts = [
-        { type: 'analytics', selector: 'script[data-cookie-type="analytics"]' },
-        { type: 'marketing', selector: 'script[data-cookie-type="marketing"]' },
-        { type: 'preferences', selector: 'script[data-cookie-type="preferences"]' }
-    ];
     constructor() {
+        this.cookieName = 'mlab_cookie_preferences';
+        // Scripts that should be blocked/unblocked based on cookie preferences
+        this.cookieScripts = [
+            { type: 'analytics', selector: 'script[data-cookie-type="analytics"]' },
+            { type: 'marketing', selector: 'script[data-cookie-type="marketing"]' },
+            { type: 'preferences', selector: 'script[data-cookie-type="preferences"]' }
+        ];
         this.banner = document.getElementById('mlab-cookie-banner');
         this.modal = document.getElementById('cookie-modal');
-        this.warningModal = null;
         this.init();
     }
     init() {
@@ -32,70 +27,6 @@ class MlabCookieBanner {
         console.log('DOM loaded for cookie banner');
         this.checkExistingPreferences();
         this.attachEventListeners();
-        this.createWarningModal();
-    }
-    createWarningModal() {
-        // Create warning modal for necessary cookies
-        const warningHtml = `
-            <div id="cookie-warning-modal" class="cookie-modal" style="display: none;">
-                <div class="cookie-modal-content cookie-warning-content">
-                    <div class="cookie-modal-header">
-                        <h3>⚠️ Attenzione - Cookie Necessari</h3>
-                    </div>
-                    <div class="cookie-modal-body">
-                        <p style="margin-bottom: 15px;">
-                            I cookie necessari sono essenziali per il corretto funzionamento dell'e-commerce.
-                            Senza questi cookie non è possibile:
-                        </p>
-                        <ul style="margin-left: 20px; margin-bottom: 15px;">
-                            <li>Effettuare acquisti</li>
-                            <li>Gestire il carrello</li>
-                            <li>Accedere all'area personale</li>
-                            <li>Mantenere la sessione di navigazione</li>
-                        </ul>
-                        <p style="font-weight: bold; color: #d9534f;">
-                            Non è possibile continuare la navigazione senza accettare i cookie necessari.
-                        </p>
-                    </div>
-                    <div class="cookie-modal-footer">
-                        <button type="button" id="cookie-warning-accept" class="btn-cookie btn-accept">
-                            ✅ Accetta Cookie Necessari
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', warningHtml);
-        this.warningModal = document.getElementById('cookie-warning-modal');
-        // Attach event to warning modal accept button
-        const acceptBtn = document.getElementById('cookie-warning-accept');
-        acceptBtn?.addEventListener('click', () => {
-            this.acceptNecessaryOnly();
-            this.closeWarningModal();
-        });
-    }
-    showWarningModal() {
-        if (this.warningModal) {
-            this.warningModal.style.display = 'block';
-            // Prevent body scroll when modal is open
-            document.body.style.overflow = 'hidden';
-        }
-    }
-    closeWarningModal() {
-        if (this.warningModal) {
-            this.warningModal.style.display = 'none';
-            document.body.style.overflow = '';
-        }
-    }
-    acceptNecessaryOnly() {
-        const preferences = {
-            analytics: false,
-            marketing: false,
-            preferences: false,
-            necessary: true
-        };
-        this.saveCookiePreferences(preferences);
-        this.applyScriptBlocking(preferences);
     }
     getCookiePreferences() {
         const cookieString = `${this.cookieName}=`;
@@ -147,6 +78,7 @@ class MlabCookieBanner {
             const elements = document.querySelectorAll(script.selector);
             const isAllowed = preferences[script.type];
             elements.forEach((element) => {
+                var _a;
                 const scriptElement = element;
                 if (isAllowed) {
                     // Enable script
@@ -157,7 +89,7 @@ class MlabCookieBanner {
                         const newScript = document.createElement('script');
                         newScript.src = scriptElement.src;
                         newScript.type = originalType;
-                        scriptElement.parentNode?.replaceChild(newScript, scriptElement);
+                        (_a = scriptElement.parentNode) === null || _a === void 0 ? void 0 : _a.replaceChild(newScript, scriptElement);
                     }
                 }
                 else {
@@ -174,8 +106,9 @@ class MlabCookieBanner {
         // Get all cookies
         const cookies = document.cookie.split(';');
         cookies.forEach(cookie => {
+            var _a;
             const parts = cookie.split('=');
-            const cookieName = parts[0]?.trim();
+            const cookieName = (_a = parts[0]) === null || _a === void 0 ? void 0 : _a.trim();
             // Skip if cookie name is invalid
             if (!cookieName) {
                 return;
@@ -230,12 +163,14 @@ class MlabCookieBanner {
         this.closeModal();
     }
     rejectAll() {
-        // Show warning modal when user tries to reject all cookies
-        this.showWarningModal();
-        // Close the main banner and modal
-        if (this.banner) {
-            this.banner.style.display = 'none';
-        }
+        // Salva preferenze con solo i cookie necessari accettati
+        const preferences = {
+            analytics: false,
+            marketing: false,
+            preferences: false,
+            necessary: true
+        };
+        this.saveCookiePreferences(preferences);
         this.closeModal();
     }
     saveCustomPreferences() {
@@ -261,21 +196,21 @@ class MlabCookieBanner {
     attachEventListeners() {
         // Customize button
         const customizeBtn = document.getElementById('cookie-customize');
-        customizeBtn?.addEventListener('click', () => this.openModal());
+        customizeBtn === null || customizeBtn === void 0 ? void 0 : customizeBtn.addEventListener('click', () => this.openModal());
         // Close modal button
         const closeModalBtn = document.getElementById('cookie-modal-close');
-        closeModalBtn?.addEventListener('click', () => this.closeModal());
+        closeModalBtn === null || closeModalBtn === void 0 ? void 0 : closeModalBtn.addEventListener('click', () => this.closeModal());
         // Save preferences button
         const savePreferencesBtn = document.getElementById('cookie-save-preferences');
-        savePreferencesBtn?.addEventListener('click', () => this.saveCustomPreferences());
+        savePreferencesBtn === null || savePreferencesBtn === void 0 ? void 0 : savePreferencesBtn.addEventListener('click', () => this.saveCustomPreferences());
         // Accept all buttons
         const acceptAllBtn = document.getElementById('cookie-accept-all');
         const acceptAllModalBtn = document.getElementById('cookie-accept-all-modal');
-        acceptAllBtn?.addEventListener('click', () => this.acceptAll());
-        acceptAllModalBtn?.addEventListener('click', () => this.acceptAll());
+        acceptAllBtn === null || acceptAllBtn === void 0 ? void 0 : acceptAllBtn.addEventListener('click', () => this.acceptAll());
+        acceptAllModalBtn === null || acceptAllModalBtn === void 0 ? void 0 : acceptAllModalBtn.addEventListener('click', () => this.acceptAll());
         // Reject button
         const rejectBtn = document.getElementById('cookie-reject');
-        rejectBtn?.addEventListener('click', () => this.rejectAll());
+        rejectBtn === null || rejectBtn === void 0 ? void 0 : rejectBtn.addEventListener('click', () => this.rejectAll());
         // Close modal by clicking outside
         window.addEventListener('click', (event) => {
             if (event.target === this.modal) {

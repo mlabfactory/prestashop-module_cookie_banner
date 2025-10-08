@@ -249,8 +249,8 @@ class ModuleController
     public function handleDisplayHeader()
     {
         try {
-            $this->context->controller->addCSS($this->module->getPathUri() . 'views/css/cookie_policy.css');
-            $this->context->controller->addJS($this->module->getPathUri() . 'views/js/cookie_policy.js');
+            $this->context->controller->addCSS($this->module->getPathUri() . 'views/css/style.css');
+            $this->context->controller->addJS($this->module->getPathUri() . 'assets/js/cookie-policy.js');
         } catch (\Exception $e) {
             \PrestaShopLogger::addLog(
                 'Cookie Policy Header Error: ' . $e->getMessage(),

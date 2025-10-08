@@ -5,7 +5,7 @@
   "description": "Manage cookie policy banner",
   "author": "mlabfactory",
   "tab": "front_office_features",
-  "is_configurable": 0,
+  "is_configurable": 1,
   "need_instance": 0,
   "limited_countries": [],
   "parent_class": "Module",
@@ -16,7 +16,9 @@
   },
   "dependencies": [],
   "hooks": [
-    "displayFooter"
+    "displayHeader",
+    "displayFooter",
+    "displayFooterAfter"
   ],
   "translations": {
     "en": {

@@ -1,8 +1,5 @@
 <?php
 
-use MlabPs\CookiePolicyModule\Controllers\ModuleController;
-
-
 /**
  * Prestashop Module to manage cookie policy banner
  * @author mlabfactory <tech@mlabfactory.com>
@@ -13,7 +10,7 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-// Carica l'autoloader di Composer
+// Carica l'autoloader di Composer PRIMA di qualsiasi use statement
 if (file_exists(__DIR__ . '/vendor/autoload.php')) {
     require_once __DIR__ . '/vendor/autoload.php';
 } else {
@@ -35,6 +32,9 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
         }
     });
 }
+
+// IMPORTANTE: use statement DOPO l'autoloader
+use MlabPs\CookiePolicyModule\Controllers\ModuleController;
 
 
 class Mlab_Cookie_Policy extends Module
@@ -108,11 +108,9 @@ class Mlab_Cookie_Policy extends Module
         }
         
         return parent::install() &&
-            $this->registerHook('actionShowCookiePolicyBanner') &&
             $this->registerHook('displayHeader') && // Per includere CSS/JS
-            $this->registerHook('displayFooter') &&
-            $this->registerHook('displayFooterAfter') && // Aggiungiamo questo hook
-            $this->registerHook('displayBeforeBodyClosingTag'); // E questo come fallback
+            $this->registerHook('displayFooter') && // Banner nel footer
+            $this->registerHook('displayFooterAfter'); // Banner dopo il footer
     }
 
     /**
@@ -167,25 +165,17 @@ class Mlab_Cookie_Policy extends Module
     }
 
     /**
-     * Hook per mostrare il banner cookie policy
+     * Hook per mostrare il banner nel footer
      */
-    public function hookActionShowCookiePolicyBanner($params)
+    public function hookDisplayFooter($params)
     {
-        // Verifica che il controller sia inizializzato
-        if (!$this->moduleController) {
-            $this->initializeControllers();
-        }
-        
-        // Gestisci qui la logica del banner cookie
-        return $this->getModuleController()->handleCookieBanner();
+        return $this->getModuleController()->handleDisplayFooter();
     }
 
-    public function hookShowCookiePolicyBanner($params)
-    {
-        // Rimuovi questo metodo o fallo puntare al metodo corretto
-        return $this->hookActionShowCookiePolicyBanner($params);
-    }
-    public function hookDisplayFooter($params)
+    /**
+     * Hook per mostrare il banner dopo il footer
+     */
+    public function hookDisplayFooterAfter($params)
     {
         return $this->getModuleController()->handleDisplayFooter();
     }
@@ -196,28 +186,5 @@ class Mlab_Cookie_Policy extends Module
     public function getContent()
     {
         return $this->getModuleController()->handleConfiguration();
-    }
-
-    public function hookDisplayFooterAfter($params)
-    {
-        // Debug
-        PrestaShopLogger::addLog('Cookie Banner: Rendering template');
-        
-        // Assegna le variabili al template
-        $this->context->smarty->assign([
-            'description' => $this->l('Utilizziamo i cookie per migliorare la tua esperienza sul nostro sito.'),
-            'cookie_needed_description' => $this->l('Questi cookie sono essenziali per il funzionamento del sito.'),
-            'cookie_analytics_description' => $this->l('Ci aiutano a capire come utilizzi il sito.'),
-            'cookie_marketing_description' => $this->l('Utilizzati per mostrarti contenuti personalizzati.'),
-            'cookie_custom_description' => $this->l('Cookie per le tue preferenze di navigazione.')
-        ]);
-
-        return $this->display(__FILE__, 'views/templates/hook/cookie_banner.tpl');
-    }
-
-    // Fallback hook
-    public function hookDisplayBeforeBodyClosingTag($params)
-    {
-        return $this->hookDisplayFooterAfter($params);
     }
 }

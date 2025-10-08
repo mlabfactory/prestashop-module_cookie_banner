@@ -20,7 +20,6 @@ interface CookieScript {
 class MlabCookieBanner {
     private banner: HTMLElement | null;
     private modal: HTMLElement | null;
-    private warningModal: HTMLElement | null;
     private readonly cookieName = 'mlab_cookie_preferences';
     
     // Scripts that should be blocked/unblocked based on cookie preferences
@@ -33,7 +32,6 @@ class MlabCookieBanner {
     constructor() {
         this.banner = document.getElementById('mlab-cookie-banner');
         this.modal = document.getElementById('cookie-modal');
-        this.warningModal = null;
         this.init();
     }
 
@@ -48,76 +46,6 @@ class MlabCookieBanner {
         console.log('DOM loaded for cookie banner');
         this.checkExistingPreferences();
         this.attachEventListeners();
-        this.createWarningModal();
-    }
-
-    private createWarningModal(): void {
-        // Create warning modal for necessary cookies
-        const warningHtml = `
-            <div id="cookie-warning-modal" class="cookie-modal" style="display: none;">
-                <div class="cookie-modal-content cookie-warning-content">
-                    <div class="cookie-modal-header">
-                        <h3>⚠️ Attenzione - Cookie Necessari</h3>
-                    </div>
-                    <div class="cookie-modal-body">
-                        <p style="margin-bottom: 15px;">
-                            I cookie necessari sono essenziali per il corretto funzionamento dell'e-commerce.
-                            Senza questi cookie non è possibile:
-                        </p>
-                        <ul style="margin-left: 20px; margin-bottom: 15px;">
-                            <li>Effettuare acquisti</li>
-                            <li>Gestire il carrello</li>
-                            <li>Accedere all'area personale</li>
-                            <li>Mantenere la sessione di navigazione</li>
-                        </ul>
-                        <p style="font-weight: bold; color: #d9534f;">
-                            Non è possibile continuare la navigazione senza accettare i cookie necessari.
-                        </p>
-                    </div>
-                    <div class="cookie-modal-footer">
-                        <button type="button" id="cookie-warning-accept" class="btn-cookie btn-accept">
-                            ✅ Accetta Cookie Necessari
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.insertAdjacentHTML('beforeend', warningHtml);
-        this.warningModal = document.getElementById('cookie-warning-modal');
-        
-        // Attach event to warning modal accept button
-        const acceptBtn = document.getElementById('cookie-warning-accept');
-        acceptBtn?.addEventListener('click', () => {
-            this.acceptNecessaryOnly();
-            this.closeWarningModal();
-        });
-    }
-
-    private showWarningModal(): void {
-        if (this.warningModal) {
-            this.warningModal.style.display = 'block';
-            // Prevent body scroll when modal is open
-            document.body.style.overflow = 'hidden';
-        }
-    }
-
-    private closeWarningModal(): void {
-        if (this.warningModal) {
-            this.warningModal.style.display = 'none';
-            document.body.style.overflow = '';
-        }
-    }
-
-    private acceptNecessaryOnly(): void {
-        const preferences: CookiePreferences = {
-            analytics: false,
-            marketing: false,
-            preferences: false,
-            necessary: true
-        };
-        this.saveCookiePreferences(preferences);
-        this.applyScriptBlocking(preferences);
     }
 
     private getCookiePreferences(): CookiePreferences | null {
@@ -271,13 +199,14 @@ class MlabCookieBanner {
     }
 
     private rejectAll(): void {
-        // Show warning modal when user tries to reject all cookies
-        this.showWarningModal();
-        
-        // Close the main banner and modal
-        if (this.banner) {
-            this.banner.style.display = 'none';
-        }
+        // Salva preferenze con solo i cookie necessari accettati
+        const preferences: CookiePreferences = {
+            analytics: false,
+            marketing: false,
+            preferences: false,
+            necessary: true
+        };
+        this.saveCookiePreferences(preferences);
         this.closeModal();
     }
 

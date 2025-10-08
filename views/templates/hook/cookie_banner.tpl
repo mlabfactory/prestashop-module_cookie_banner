@@ -6,20 +6,6 @@
 {* Debug info *}
 <!-- Cookie Banner Debug: Template loaded -->
 
-<style>
-    .mlab-cookie-banner {
-        display: none;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 9999;
-        background: white;
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-        padding: 15px;
-    }
-</style>
-
 <div id="mlab-cookie-banner" class="mlab-cookie-banner">
     <div class="cookie-banner-container">
         <div class="cookie-content">
@@ -120,3 +106,4 @@
         </div>
     </div>
 </div>
+
