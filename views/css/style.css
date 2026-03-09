@@ -259,3 +259,44 @@
         width: 100%;
     }
 }
+
+/* Cookie duration notice & controller info */
+.cookie-duration-notice,
+.cookie-controller-info {
+    margin: 4px 0 0 0;
+    font-size: 0.78rem;
+    opacity: 0.85;
+    line-height: 1.4;
+}
+
+/* Floating cookie settings button */
+.mlab-cookie-settings-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #D4B896 0%, #8B6914 100%);
+    border: 2px solid #5D4E37;
+    color: white;
+    font-size: 1.4rem;
+    cursor: pointer;
+    z-index: 999998;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.mlab-cookie-settings-btn:hover {
+    transform: scale(1.15);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+}
+
+.mlab-cookie-settings-btn:focus {
+    outline: 3px solid #FFE4B3;
+    outline-offset: 2px;
+}

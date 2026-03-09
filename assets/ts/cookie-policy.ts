@@ -10,6 +10,8 @@ interface CookiePreferences {
     marketing: boolean;
     preferences: boolean;
     necessary: boolean;
+    policyVersion: string;
+    consentId: string;
 }
 
 interface CookieScript {
@@ -17,12 +19,20 @@ interface CookieScript {
     selector: string;
 }
 
+interface MlabCookieConfig {
+    policyVersion: string;
+    ajaxUrl: string;
+    durationDays: number;
+}
+
+declare const mlabCookieConfig: MlabCookieConfig;
+
 class MlabCookieBanner {
     private banner: HTMLElement | null;
     private modal: HTMLElement | null;
+    private floatingBtn: HTMLElement | null;
     private readonly cookieName = 'mlab_cookie_preferences';
-    
-    // Scripts that should be blocked/unblocked based on cookie preferences
+
     private readonly cookieScripts: CookieScript[] = [
         { type: 'analytics', selector: 'script[data-cookie-type="analytics"]' },
         { type: 'marketing', selector: 'script[data-cookie-type="marketing"]' },
@@ -32,18 +42,24 @@ class MlabCookieBanner {
     constructor() {
         this.banner = document.getElementById('mlab-cookie-banner');
         this.modal = document.getElementById('cookie-modal');
+        this.floatingBtn = document.getElementById('mlab-cookie-settings-btn');
         this.init();
     }
 
+    private getConfig(): MlabCookieConfig {
+        const cfg = (typeof mlabCookieConfig !== 'undefined') ? mlabCookieConfig : null;
+        return {
+            policyVersion: cfg?.policyVersion ?? '1.0',
+            ajaxUrl: cfg?.ajaxUrl ?? '',
+            durationDays: cfg?.durationDays ?? 365,
+        };
+    }
+
     private init(): void {
-        console.log('Cookie banner script loaded');
-        
         if (!this.banner || !this.modal) {
             console.warn('Cookie banner elements not found');
             return;
         }
-
-        console.log('DOM loaded for cookie banner');
         this.checkExistingPreferences();
         this.attachEventListeners();
     }
@@ -51,14 +67,12 @@ class MlabCookieBanner {
     private getCookiePreferences(): CookiePreferences | null {
         const cookieString = `${this.cookieName}=`;
         const cookies = document.cookie.split(';');
-        
         for (let cookie of cookies) {
             cookie = cookie.trim();
             if (cookie.indexOf(cookieString) === 0) {
                 try {
-                    return JSON.parse(cookie.substring(cookieString.length));
-                } catch (error) {
-                    console.error('Error parsing cookie preferences:', error);
+                    return JSON.parse(decodeURIComponent(cookie.substring(cookieString.length)));
+                } catch {
                     return null;
                 }
             }
@@ -66,210 +80,212 @@ class MlabCookieBanner {
         return null;
     }
 
+    /** Controlla se il consenso salvato è ancora valido per la versione policy corrente. */
     private checkExistingPreferences(): void {
-        const existingPreferences = this.getCookiePreferences();
-        if (!existingPreferences && this.banner) {
-            this.banner.style.display = 'block';
-            // Block all non-necessary scripts by default until user makes a choice
-            this.blockAllNonNecessaryScripts();
-        } else if (this.banner) {
-            this.banner.style.display = 'none';
-            // Apply script blocking based on existing preferences
-            if (existingPreferences) {
-                this.applyScriptBlocking(existingPreferences);
+        const existing = this.getCookiePreferences();
+        const currentVersion = this.getConfig().policyVersion;
+
+        const isExpired = existing && existing.policyVersion !== currentVersion;
+
+        if (!existing || isExpired) {
+            if (isExpired) {
+                this.clearPreferenceCookie();
             }
+            this.showBanner();
+            this.blockAllNonNecessaryScripts();
+        } else {
+            this.hideBanner();
+            this.showFloatingBtn();
+            this.applyScriptBlocking(existing);
         }
     }
 
+    private showBanner(): void {
+        if (this.banner) this.banner.style.display = 'block';
+        if (this.floatingBtn) this.floatingBtn.style.display = 'none';
+    }
+
+    private hideBanner(): void {
+        if (this.banner) this.banner.style.display = 'none';
+    }
+
+    private showFloatingBtn(): void {
+        if (this.floatingBtn) this.floatingBtn.style.display = 'flex';
+    }
+
     private blockAllNonNecessaryScripts(): void {
-        // Block all scripts that require cookie consent
         this.cookieScripts.forEach(script => {
-            const elements = document.querySelectorAll(script.selector);
-            elements.forEach((element) => {
-                const scriptElement = element as HTMLScriptElement;
-                // Store original type and set to plain text to prevent execution
-                scriptElement.dataset.originalType = scriptElement.type || 'text/javascript';
-                scriptElement.type = 'text/plain';
+            document.querySelectorAll<HTMLScriptElement>(script.selector).forEach(el => {
+                el.dataset.originalType = el.type || 'text/javascript';
+                el.type = 'text/plain';
             });
         });
     }
 
     private applyScriptBlocking(preferences: CookiePreferences): void {
-        // Enable or disable scripts based on preferences
         this.cookieScripts.forEach(script => {
-            const elements = document.querySelectorAll(script.selector);
-            const isAllowed = preferences[script.type];
-            
-            elements.forEach((element) => {
-                const scriptElement = element as HTMLScriptElement;
-                
-                if (isAllowed) {
-                    // Enable script
-                    const originalType = scriptElement.dataset.originalType || 'text/javascript';
-                    scriptElement.type = originalType;
-                    
-                    // If script was blocked, reload it
-                    if (scriptElement.src && scriptElement.dataset.originalType) {
+            const allowed = preferences[script.type];
+            document.querySelectorAll<HTMLScriptElement>(script.selector).forEach(el => {
+                if (allowed) {
+                    const originalType = el.dataset.originalType || 'text/javascript';
+                    el.type = originalType;
+                    if (el.src && el.dataset.originalType) {
                         const newScript = document.createElement('script');
-                        newScript.src = scriptElement.src;
+                        newScript.src = el.src;
                         newScript.type = originalType;
-                        scriptElement.parentNode?.replaceChild(newScript, scriptElement);
+                        el.parentNode?.replaceChild(newScript, el);
                     }
                 } else {
-                    // Block script
-                    scriptElement.dataset.originalType = scriptElement.type || 'text/javascript';
-                    scriptElement.type = 'text/plain';
+                    el.dataset.originalType = el.type || 'text/javascript';
+                    el.type = 'text/plain';
                 }
             });
         });
 
-        // Remove cookies that are not allowed
         this.removeUnauthorizedCookies(preferences);
     }
 
     private removeUnauthorizedCookies(preferences: CookiePreferences): void {
-        // Get all cookies
-        const cookies = document.cookie.split(';');
-        
-        cookies.forEach(cookie => {
-            const parts = cookie.split('=');
-            const cookieName = parts[0]?.trim();
-            
-            // Skip if cookie name is invalid
-            if (!cookieName) {
-                return;
-            }
-            
-            // Skip our preference cookie
-            if (cookieName === this.cookieName) {
-                return;
-            }
-            
-            // Define cookie patterns for each category
-            // Customize these patterns based on your actual cookies
-            const analyticsPatterns = ['_ga', '_gid', '_gat', 'analytics'];
-            const marketingPatterns = ['_fbp', '_gcl', 'marketing', 'ads'];
-            const preferencesPatterns = ['pref_', 'user_pref'];
-            
-            let shouldRemove = false;
-            
-            if (!preferences.analytics && analyticsPatterns.some(pattern => cookieName.includes(pattern))) {
-                shouldRemove = true;
-            } else if (!preferences.marketing && marketingPatterns.some(pattern => cookieName.includes(pattern))) {
-                shouldRemove = true;
-            } else if (!preferences.preferences && preferencesPatterns.some(pattern => cookieName.includes(pattern))) {
-                shouldRemove = true;
-            }
-            
-            if (shouldRemove) {
-                // Remove cookie by setting expiry date in the past
-                document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        const analyticsPatterns = ['_ga', '_gid', '_gat', 'analytics'];
+        const marketingPatterns = ['_fbp', '_gcl', 'marketing', 'ads'];
+        const preferencesPatterns = ['pref_', 'user_pref'];
+
+        document.cookie.split(';').forEach(raw => {
+            const name = raw.split('=')[0]?.trim();
+            if (!name || name === this.cookieName) return;
+
+            let remove = false;
+            if (!preferences.analytics && analyticsPatterns.some(p => name.includes(p))) remove = true;
+            else if (!preferences.marketing && marketingPatterns.some(p => name.includes(p))) remove = true;
+            else if (!preferences.preferences && preferencesPatterns.some(p => name.includes(p))) remove = true;
+
+            if (remove) {
+                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
             }
         });
     }
 
     private saveCookiePreferences(preferences: CookiePreferences): void {
-        const expiryDate = new Date();
-        expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-        
-        document.cookie = `${this.cookieName}=${JSON.stringify(preferences)};expires=${expiryDate.toUTCString()};path=/`;
-        
-        if (this.banner) {
-            this.banner.style.display = 'none';
-        }
-        
-        // Apply script blocking based on new preferences
+        const days = this.getConfig().durationDays;
+        const expiry = new Date();
+        expiry.setDate(expiry.getDate() + days);
+
+        document.cookie = `${this.cookieName}=${encodeURIComponent(JSON.stringify(preferences))};expires=${expiry.toUTCString()};path=/;SameSite=Lax`;
+
+        this.hideBanner();
+        this.showFloatingBtn();
         this.applyScriptBlocking(preferences);
     }
 
-    private getCheckboxValue(id: string): boolean {
-        const checkbox = document.getElementById(id) as HTMLInputElement;
-        return checkbox ? checkbox.checked : false;
+    private generateUuid(): string {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r = Math.random() * 16 | 0;
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+    }
+
+    private clearPreferenceCookie(): void {
+        document.cookie = `${this.cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    }
+
+    /** Invia il consenso al server per il logging server-side (audit trail GDPR). */
+    private logConsent(action: string, preferences: CookiePreferences): void {
+        const { ajaxUrl } = this.getConfig();
+        if (!ajaxUrl) return;
+
+        fetch(ajaxUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                consent_id: preferences.consentId,
+                policy_version: preferences.policyVersion,
+                action,
+                preferences: {
+                    analytics: preferences.analytics,
+                    marketing: preferences.marketing,
+                    preferences: preferences.preferences,
+                },
+            }),
+        }).catch(() => {
+            // Il consenso è già salvato lato client; il log server-side è best-effort
+        });
+    }
+
+    private buildPreferences(analytics: boolean, marketing: boolean, prefs: boolean): CookiePreferences {
+        return {
+            analytics,
+            marketing,
+            preferences: prefs,
+            necessary: true,
+            policyVersion: this.getConfig().policyVersion,
+            consentId: this.generateUuid(),
+        };
     }
 
     private acceptAll(): void {
-        const preferences: CookiePreferences = {
-            analytics: true,
-            marketing: true,
-            preferences: true,
-            necessary: true
-        };
+        const preferences = this.buildPreferences(true, true, true);
         this.saveCookiePreferences(preferences);
+        this.logConsent('accept_all', preferences);
         this.closeModal();
     }
 
     private rejectAll(): void {
-        // Salva preferenze con solo i cookie necessari accettati
-        const preferences: CookiePreferences = {
-            analytics: false,
-            marketing: false,
-            preferences: false,
-            necessary: true
-        };
+        const preferences = this.buildPreferences(false, false, false);
         this.saveCookiePreferences(preferences);
+        this.logConsent('reject_all', preferences);
         this.closeModal();
     }
 
     private saveCustomPreferences(): void {
-        const preferences: CookiePreferences = {
-            analytics: this.getCheckboxValue('cookie-analytics'),
-            marketing: this.getCheckboxValue('cookie-marketing'),
-            preferences: this.getCheckboxValue('cookie-preferences'),
-            necessary: true
-        };
+        const get = (id: string) => (document.getElementById(id) as HTMLInputElement)?.checked ?? false;
+        const preferences = this.buildPreferences(get('cookie-analytics'), get('cookie-marketing'), get('cookie-preferences'));
         this.saveCookiePreferences(preferences);
+        this.logConsent('custom', preferences);
         this.closeModal();
     }
 
+    /** Sincronizza le checkbox del modal con le preferenze attualmente salvate. */
+    private syncModalCheckboxes(): void {
+        const existing = this.getCookiePreferences();
+        const set = (id: string, val: boolean) => {
+            const el = document.getElementById(id) as HTMLInputElement | null;
+            if (el) el.checked = val;
+        };
+        set('cookie-analytics', existing?.analytics ?? false);
+        set('cookie-marketing', existing?.marketing ?? false);
+        set('cookie-preferences', existing?.preferences ?? false);
+    }
+
     private openModal(): void {
-        if (this.modal) {
-            this.modal.style.display = 'block';
-        }
+        this.syncModalCheckboxes();
+        if (this.modal) this.modal.style.display = 'flex';
     }
 
     private closeModal(): void {
-        if (this.modal) {
-            this.modal.style.display = 'none';
-        }
+        if (this.modal) this.modal.style.display = 'none';
     }
 
     private attachEventListeners(): void {
-        // Customize button
-        const customizeBtn = document.getElementById('cookie-customize');
-        customizeBtn?.addEventListener('click', () => this.openModal());
+        document.getElementById('cookie-customize')?.addEventListener('click', () => this.openModal());
+        document.getElementById('cookie-modal-close')?.addEventListener('click', () => this.closeModal());
+        document.getElementById('cookie-save-preferences')?.addEventListener('click', () => this.saveCustomPreferences());
+        document.getElementById('cookie-reject-modal')?.addEventListener('click', () => this.rejectAll());
+        document.getElementById('cookie-accept-all')?.addEventListener('click', () => this.acceptAll());
+        document.getElementById('cookie-accept-all-modal')?.addEventListener('click', () => this.acceptAll());
+        document.getElementById('cookie-reject')?.addEventListener('click', () => this.rejectAll());
 
-        // Close modal button
-        const closeModalBtn = document.getElementById('cookie-modal-close');
-        closeModalBtn?.addEventListener('click', () => this.closeModal());
+        // Floating button apre direttamente il modal
+        this.floatingBtn?.addEventListener('click', () => this.openModal());
 
-        // Save preferences button
-        const savePreferencesBtn = document.getElementById('cookie-save-preferences');
-        savePreferencesBtn?.addEventListener('click', () => this.saveCustomPreferences());
-
-        // Accept all buttons
-        const acceptAllBtn = document.getElementById('cookie-accept-all');
-        const acceptAllModalBtn = document.getElementById('cookie-accept-all-modal');
-        
-        acceptAllBtn?.addEventListener('click', () => this.acceptAll());
-        acceptAllModalBtn?.addEventListener('click', () => this.acceptAll());
-
-        // Reject button
-        const rejectBtn = document.getElementById('cookie-reject');
-        rejectBtn?.addEventListener('click', () => this.rejectAll());
-
-        // Close modal by clicking outside
-        window.addEventListener('click', (event: MouseEvent) => {
-            if (event.target === this.modal) {
-                this.closeModal();
-            }
+        // Chiudi modal cliccando fuori
+        window.addEventListener('click', (e: MouseEvent) => {
+            if (e.target === this.modal) this.closeModal();
         });
     }
 }
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    const cookieBannerElement = document.getElementById('mlab-cookie-banner');
-    if (cookieBannerElement) {
+    if (document.getElementById('mlab-cookie-banner')) {
         new MlabCookieBanner();
     }
 });

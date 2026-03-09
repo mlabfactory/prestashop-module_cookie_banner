@@ -132,6 +132,38 @@ class ModuleController
                 'class' => 'fixed-width-m',
                 'required' => false,
             ],
+            [
+                'type' => 'text',
+                'label' => $this->module->l('Nome Titolare del Trattamento'),
+                'name' => 'COOKIE_CONTROLLER_NAME',
+                'class' => 'fixed-width-m',
+                'required' => false,
+                'desc' => $this->module->l('Es: Pinco Pallino S.r.l. — mostrato nel banner per identificare il titolare del trattamento dati (GDPR Art. 13).'),
+            ],
+            [
+                'type' => 'text',
+                'label' => $this->module->l('Email Titolare del Trattamento'),
+                'name' => 'COOKIE_CONTROLLER_EMAIL',
+                'class' => 'fixed-width-m',
+                'required' => false,
+                'desc' => $this->module->l('Es: privacy@example.com — mostrata nel banner per le richieste privacy.'),
+            ],
+            [
+                'type' => 'text',
+                'label' => $this->module->l('Versione Policy'),
+                'name' => 'COOKIE_POLICY_VERSION',
+                'class' => 'fixed-width-xs',
+                'required' => false,
+                'desc' => $this->module->l('Incrementa questo valore (es: 1.0 → 1.1) per invalidare i consensi precedenti e richiedere un nuovo consenso agli utenti.'),
+            ],
+            [
+                'type' => 'text',
+                'label' => $this->module->l('Durata consenso (giorni)'),
+                'name' => 'COOKIE_DURATION_DAYS',
+                'class' => 'fixed-width-xs',
+                'required' => false,
+                'desc' => $this->module->l('Numero di giorni prima di richiedere un nuovo consenso (default: 365). Verrà mostrato all\'utente nel banner.'),
+            ],
         ];
     }
     
@@ -161,10 +193,21 @@ class ModuleController
     }
 
     /**
+     * Impedisce che il banner venga renderizzato più di una volta per richiesta,
+     * anche se più hook (displayFooter + displayFooterAfter) sono attivi.
+     */
+    private static bool $bannerRendered = false;
+
+    /**
      * Metodo principale per generare il banner cookie
      */
     public function displayBanner(string $position = 'footer'): string
     {
+        if (self::$bannerRendered) {
+            return '';
+        }
+        self::$bannerRendered = true;
+
         try {
             // Usa direttamente Configuration invece delle classi
             $templateVars = array_merge([
@@ -177,6 +220,16 @@ class ModuleController
                 'cookie_analytics_description' => \Configuration::get('COOKIE_DESCRIPTION_COOKIE_ANALYTICS', ''),
                 'cookie_marketing_description' => \Configuration::get('COOKIE_DESCRIPTION_COOKIE_MARKETING', ''),
                 'cookie_custom_description' => \Configuration::get('COOKIE_DESCRIPTION_COOKIE_CUSTOM', ''),
+                'controller_name' => \Configuration::get('COOKIE_CONTROLLER_NAME', ''),
+                'controller_email' => \Configuration::get('COOKIE_CONTROLLER_EMAIL', ''),
+                'policy_version' => \Configuration::get('COOKIE_POLICY_VERSION', '1.0'),
+                'duration_days' => (int) \Configuration::get('COOKIE_DURATION_DAYS', 365),
+                'ajax_url' => $this->context->link->getModuleLink($this->moduleName, 'consent', [], true),
+                'cookie_js_config' => json_encode([
+                    'policyVersion' => \Configuration::get('COOKIE_POLICY_VERSION', '1.0'),
+                    'ajaxUrl'       => $this->context->link->getModuleLink($this->moduleName, 'consent', [], true),
+                    'durationDays'  => (int) \Configuration::get('COOKIE_DURATION_DAYS', 365),
+                ]),
             ], $this->dictionary());
             
             $this->context->smarty->assign($templateVars);
@@ -276,10 +329,26 @@ class ModuleController
         }
     }
 
-    public function handleConfiguration()
+    public function handleConfiguration(): string
     {
         try {
-            return $this->displayConfigurationForm();
+            $output = '';
+
+            if (\Tools::isSubmit('submit' . $this->moduleName)) {
+                foreach ($this->getConfigurationFields() as $field) {
+                    if (isset($field['name'])) {
+                        \Configuration::updateValue(
+                            $field['name'],
+                            \Tools::getValue($field['name'], '')
+                        );
+                    }
+                }
+                $output .= $this->module->displayConfirmation(
+                    $this->module->l('Impostazioni salvate con successo.')
+                );
+            }
+
+            return $output . $this->displayConfigurationForm();
         } catch (\Exception $e) {
             \PrestaShopLogger::addLog(
                 'Cookie Policy Configuration Error: ' . $e->getMessage(),
